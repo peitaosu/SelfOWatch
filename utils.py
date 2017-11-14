@@ -1,3 +1,4 @@
+import os
 import wx
 import cv2
 import numpy
@@ -31,3 +32,19 @@ def human_detect(img_file, human_file):
     for (xA, yA, xB, yB) in pick:
         cv2.rectangle(img, (xA, yA), (xB, yB), (0, 255, 0), 2)
     cv2.imwrite(human_file, img)
+
+def face_detect(img_file, face_file):
+    face_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_frontalface_default.xml'))
+    eye_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_eye.xml'))
+
+    img_rgb = cv2.imread(img_file)
+    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(img_gray, 1.3, 5)
+    for (x,y,w,h) in faces:
+        img_rgb = cv2.rectangle(img_rgb,(x,y),(x+w,y+h),(255,0,0),2)
+        roi_gray = img_gray[y:y+h, x:x+w]
+        roi_color = img_rgb[y:y+h, x:x+w]
+        eyes = eye_cascade.detectMultiScale(roi_gray)
+        for (ex,ey,ew,eh) in eyes:
+            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
+    cv2.imwrite(face_file, img_rgb)
