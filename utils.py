@@ -17,7 +17,7 @@ def capture_screen(save_file):
 
 def canny_edge_detect(img_file, edge_file):
     img_rgb = cv2.imread(img_file, 0)
-    img_gray = cv2.GaussianBlur(img_rgb,(3,3),0)
+    img_gray = cv2.GaussianBlur(img_rgb, (3, 3), 0)
     img_edge = cv2.Canny(img_gray, 50, 150)
     cv2.imwrite(edge_file, img_edge)
 
@@ -34,23 +34,24 @@ def human_detect(img_file, human_file):
     cv2.imwrite(human_file, img)
 
 def face_detect(img_file, face_file):
-    face_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_frontalface_default.xml'))
+    face_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath( __file__)), r'opencv\data\haarcascades\haarcascade_frontalface_default.xml'))
     eye_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_eye.xml'))
 
     img_rgb = cv2.imread(img_file)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(img_gray, 1.3, 5)
-    for (x,y,w,h) in faces:
-        img_rgb = cv2.rectangle(img_rgb,(x,y),(x+w,y+h),(255,0,0),2)
-        roi_gray = img_gray[y:y+h, x:x+w]
-        roi_color = img_rgb[y:y+h, x:x+w]
+    for (x, y, w, h) in faces:
+        img_rgb = cv2.rectangle(img_rgb, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        roi_gray = img_gray[y:y + h, x:x + w]
+        roi_color = img_rgb[y:y + h, x:x + w]
         eyes = eye_cascade.detectMultiScale(roi_gray)
-        for (ex,ey,ew,eh) in eyes:
-            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
+        for (ex, ey, ew, eh) in eyes:
+            cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
     cv2.imwrite(face_file, img_rgb)
 
 def object_detect(img_file, obj_file):
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
+               "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.prototxt.txt'), os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.caffemodel'))
     image = cv2.imread(img_file)
@@ -64,11 +65,7 @@ def object_detect(img_file, obj_file):
             idx = int(detections[0, 0, i, 1])
             box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype("int")
-            label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-            print("[INFO] {}".format(label))
-            cv2.rectangle(image, (startX, startY), (endX, endY),
-                COLORS[idx], 2)
+            cv2.rectangle(image, (startX, startY), (endX, endY), COLORS[idx], 2)
             y = startY - 15 if startY - 15 > 15 else startY + 15
-            cv2.putText(image, label, (startX, y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+            cv2.putText(image, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
     cv2.imwrite(obj_file, image)
