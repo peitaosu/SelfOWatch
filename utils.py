@@ -4,24 +4,27 @@ import cv2
 import numpy
 import imutils
 from imutils.object_detection import non_max_suppression
+import time
 
 def capture_screen(save_file):
-    wx.App()
+    app = wx.App()
     screen = wx.ScreenDC()
     size = screen.GetSize()
-    bmp = wx.EmptyBitmap(size[0], size[1])
+    bmp = wx.Bitmap(size[0], size[1])
     mem = wx.MemoryDC(bmp)
     mem.Blit(0, 0, size[0], size[1], screen, 0, 0)
     del mem
     bmp.SaveFile(save_file, wx.BITMAP_TYPE_PNG)
 
-def canny_edge_detect(img_file, edge_file):
+def canny_edge_detect(img_file, edge_file=None):
     img_rgb = cv2.imread(img_file, 0)
     img_gray = cv2.GaussianBlur(img_rgb, (3, 3), 0)
     img_edge = cv2.Canny(img_gray, 50, 150)
-    cv2.imwrite(edge_file, img_edge)
+    if edge_file is not None:
+        cv2.imwrite(edge_file, img_edge)
+    return img_edge
 
-def human_detect(img_file, human_file):
+def human_detect(img_file, human_file=None):
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
     img = cv2.imread(img_file, 0)
@@ -31,9 +34,11 @@ def human_detect(img_file, human_file):
     pick = non_max_suppression(rects, probs=None, overlapThresh=0.65)
     for (xA, yA, xB, yB) in pick:
         cv2.rectangle(img, (xA, yA), (xB, yB), (0, 255, 0), 2)
-    cv2.imwrite(human_file, img)
+    if human_file is not None:
+        cv2.imwrite(human_file, img)
+    return pick
 
-def face_detect(img_file, face_file):
+def face_detect(img_file, face_file=None):
     face_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath( __file__)), r'opencv\data\haarcascades\haarcascade_frontalface_default.xml'))
     eye_cascade = cv2.CascadeClassifier(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_eye.xml'))
 
@@ -47,9 +52,11 @@ def face_detect(img_file, face_file):
         eyes = eye_cascade.detectMultiScale(roi_gray)
         for (ex, ey, ew, eh) in eyes:
             cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
-    cv2.imwrite(face_file, img_rgb)
+    if face_file is not None:
+        cv2.imwrite(face_file, img_rgb)
+    return faces
 
-def object_detect(img_file, obj_file):
+def object_detect(img_file, obj_file=None):
     CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
                "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
@@ -65,7 +72,10 @@ def object_detect(img_file, obj_file):
             idx = int(detections[0, 0, i, 1])
             box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype("int")
+            label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
             cv2.rectangle(image, (startX, startY), (endX, endY), COLORS[idx], 2)
             y = startY - 15 if startY - 15 > 15 else startY + 15
             cv2.putText(image, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
-    cv2.imwrite(obj_file, image)
+    if obj_file is not None:
+        cv2.imwrite(obj_file, image)
+    return detections
