@@ -48,3 +48,27 @@ def face_detect(img_file, face_file):
         for (ex,ey,ew,eh) in eyes:
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
     cv2.imwrite(face_file, img_rgb)
+
+def object_detect(img_file, obj_file):
+    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+    COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
+    net = cv2.dnn.readNetFromCaffe(os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.prototxt.txt'), os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.caffemodel'))
+    image = cv2.imread(img_file)
+    (h, w) = image.shape[:2]
+    blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 0.007843, (300, 300), 127.5)
+    net.setInput(blob)
+    detections = net.forward()
+    for i in numpy.arange(0, detections.shape[2]):
+        confidence = detections[0, 0, i, 2]
+        if confidence > 0.2:
+            idx = int(detections[0, 0, i, 1])
+            box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
+            (startX, startY, endX, endY) = box.astype("int")
+            label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
+            print("[INFO] {}".format(label))
+            cv2.rectangle(image, (startX, startY), (endX, endY),
+                COLORS[idx], 2)
+            y = startY - 15 if startY - 15 > 15 else startY + 15
+            cv2.putText(image, label, (startX, y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+    cv2.imwrite(obj_file, image)
