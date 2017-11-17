@@ -5,6 +5,7 @@ import numpy
 import imutils
 from imutils.object_detection import non_max_suppression
 import time
+import PIL
 
 def capture_screen(save_file):
     app = wx.App()
@@ -15,6 +16,19 @@ def capture_screen(save_file):
     mem.Blit(0, 0, size[0], size[1], screen, 0, 0)
     del mem
     bmp.SaveFile(save_file, wx.BITMAP_TYPE_PNG)
+
+def record_screen(seconds=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    vid = cv2.VideoWriter(save_file, fourcc, 19.5, (width, height))
+    timeout = time.time() + seconds
+    while True:
+        img_bgr = PIL.ImageGrab.grab(bbox=(x_start, y_start, width, height))
+        img_np = numpy.array(img_bgr)
+        img_rgb = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
+        vid.write(img_rgb)
+        if time.time() > timeout:
+            cv2.destroyAllWindows()
+            break
 
 def canny_edge_detect(img_file, edge_file=None):
     img_rgb = cv2.imread(img_file, 0)
