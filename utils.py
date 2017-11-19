@@ -7,15 +7,13 @@ from imutils.object_detection import non_max_suppression
 import time
 import PIL
 
-def capture_screen(save_file):
-    app = wx.App()
-    screen = wx.ScreenDC()
-    size = screen.GetSize()
-    bmp = wx.Bitmap(size[0], size[1])
-    mem = wx.MemoryDC(bmp)
-    mem.Blit(0, 0, size[0], size[1], screen, 0, 0)
-    del mem
-    bmp.SaveFile(save_file, wx.BITMAP_TYPE_PNG)
+def capture_screen(x_start=0, y_start=0, width=1920, height=1080, save_file=None):
+    img_bgr = PIL.ImageGrab.grab(bbox=(x_start, y_start, width, height))
+    img_np = numpy.array(img_bgr)
+    img_rgb = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
+    if save_file is not None:
+        cv2.imwrite(save_file, img_rgb)
+    return img_rgb
 
 def record_screen(seconds=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
