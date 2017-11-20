@@ -5,7 +5,7 @@ import numpy
 import imutils
 from imutils.object_detection import non_max_suppression
 import time
-import PIL
+from PIL import ImageGrab
 
 HAARCASCADE_FRONTALFACE_DEFAULT = os.path.join(os.path.dirname(os.path.realpath( __file__)), r'opencv\data\haarcascades\haarcascade_frontalface_default.xml')
 HAARCASCADE_EYE = os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_eye.xml')
@@ -13,7 +13,7 @@ PROTOTXT_MOBILE_NET_SSD = os.path.join(os.path.dirname(os.path.realpath(__file__
 CAFFEMODEL_MOBILE_NET_SSD = os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.caffemodel')
 
 def capture_screen(x_start=0, y_start=0, width=1920, height=1080, save_file=None):
-    img_bgr = PIL.ImageGrab.grab(bbox=(x_start, y_start, width, height))
+    img_bgr = ImageGrab.grab(bbox=(x_start, y_start, width, height))
     img_np = numpy.array(img_bgr)
     img_rgb = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
     if save_file is not None:
@@ -127,3 +127,32 @@ def real_time_object_detect():
     fps.stop()
     cv2.destroyAllWindows()
     vs.stop()
+
+def object_detect_from_screen(seconds=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
+    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
+               "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+    COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
+    net = cv2.dnn.readNetFromCaffe(PROTOTXT_MOBILE_NET_SSD, CAFFEMODEL_MOBILE_NET_SSD)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    vid = cv2.VideoWriter(save_file, fourcc, 19.5, (width, height))
+    timeout = time.time() + seconds
+    while True:
+        img_rgb = capture_screen(x_start, y_start, width, height)
+        (h, w) = img_rgb.shape[:2]
+        blob = cv2.dnn.blobFromImage(cv2.resize(img_rgb, (300, 300)), 0.007843, (300, 300), 127.5)
+        net.setInput(blob)
+        detections = net.forward()
+        for i in numpy.arange(0, detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            if confidence > 0.2:
+                idx = int(detections[0, 0, i, 1])
+                box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
+                (startX, startY, endX, endY) = box.astype("int")
+                label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
+                cv2.rectangle(img_rgb, (startX, startY), (endX, endY), COLORS[idx], 2)
+                y = startY - 15 if startY - 15 > 15 else startY + 15
+                cv2.putText(img_rgb, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+        vid.write(img_rgb)
+        if time.time() > timeout:
+            cv2.destroyAllWindows()
+            break
