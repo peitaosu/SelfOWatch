@@ -20,14 +20,15 @@ def capture_screen(x_start=0, y_start=0, width=1920, height=1080, save_file=None
         cv2.imwrite(save_file, img_rgb)
     return img_rgb
 
-def record_screen(seconds=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
+def record_screen(frames=10, bit_rate=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    vid = cv2.VideoWriter(save_file, fourcc, 19.5, (width, height))
-    timeout = time.time() + seconds
+    vid = cv2.VideoWriter(save_file, fourcc, bit_rate, (width, height))
+    frame = 0
     while True:
         img_rgb = capture_screen(x_start, y_start, width, height)
         vid.write(img_rgb)
-        if time.time() > timeout:
+        frame += 1
+        if frame >= frames:
             cv2.destroyAllWindows()
             break
 
@@ -128,14 +129,14 @@ def real_time_object_detect():
     cv2.destroyAllWindows()
     vs.stop()
 
-def object_detect_from_screen(seconds=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
+def object_detect_from_screen(frames=100, bit_rate=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
     CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
                "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe(PROTOTXT_MOBILE_NET_SSD, CAFFEMODEL_MOBILE_NET_SSD)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    vid = cv2.VideoWriter(save_file, fourcc, 19.5, (width, height))
-    timeout = time.time() + seconds
+    vid = cv2.VideoWriter(save_file, fourcc, bit_rate, (width, height))
+    frame = 0
     while True:
         img_rgb = capture_screen(x_start, y_start, width, height)
         (h, w) = img_rgb.shape[:2]
@@ -153,6 +154,7 @@ def object_detect_from_screen(seconds=10, save_file="output.avi", x_start=0, y_s
                 y = startY - 15 if startY - 15 > 15 else startY + 15
                 cv2.putText(img_rgb, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
         vid.write(img_rgb)
-        if time.time() > timeout:
+        frame += 1
+        if frame >= frames:
             cv2.destroyAllWindows()
             break
