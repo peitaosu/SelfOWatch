@@ -11,6 +11,9 @@ HAARCASCADE_FRONTALFACE_DEFAULT = os.path.join(os.path.dirname(os.path.realpath(
 HAARCASCADE_EYE = os.path.join(os.path.dirname(os.path.realpath(__file__)), r'opencv\data\haarcascades\haarcascade_eye.xml')
 PROTOTXT_MOBILE_NET_SSD = os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.prototxt.txt')
 CAFFEMODEL_MOBILE_NET_SSD = os.path.join(os.path.dirname(os.path.realpath(__file__)), r'dnn\Caffe\MobileNetSSD_deploy.caffemodel')
+CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
+            "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+GLOB_CONFIDENCE = 0.2
 
 def capture_screen(x_start=0, y_start=0, width=1920, height=1080, save_file=None):
     img_bgr = ImageGrab.grab(bbox=(x_start, y_start, width, height))
@@ -73,8 +76,6 @@ def face_detect(img_file, face_file=None):
     return faces
 
 def object_detect(img_file, obj_file=None):
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
-               "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe(PROTOTXT_MOBILE_NET_SSD, CAFFEMODEL_MOBILE_NET_SSD)
     image = cv2.imread(img_file)
@@ -84,7 +85,7 @@ def object_detect(img_file, obj_file=None):
     detections = net.forward()
     for i in numpy.arange(0, detections.shape[2]):
         confidence = detections[0, 0, i, 2]
-        if confidence > 0.2:
+        if confidence > GLOB_CONFIDENCE:
             idx = int(detections[0, 0, i, 1])
             box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype("int")
@@ -97,8 +98,6 @@ def object_detect(img_file, obj_file=None):
     return detections
 
 def real_time_object_detect():
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
-               "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe(PROTOTXT_MOBILE_NET_SSD, CAFFEMODEL_MOBILE_NET_SSD)
     video_stram = imutils.video.VideoStream(src=0).start()
@@ -112,7 +111,7 @@ def real_time_object_detect():
         detections = net.forward()
         for i in numpy.arange(0, detections.shape[2]):
             confidence = detections[0, 0, i, 2]
-            if confidence > 0.2:
+            if confidence > GLOB_CONFIDENCE:
                 idx = int(detections[0, 0, i, 1])
                 box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
@@ -130,8 +129,6 @@ def real_time_object_detect():
     vs.stop()
 
 def object_detect_from_screen(frames=100, bit_rate=10, save_file="output.avi", x_start=0, y_start=0, width=1920, height=1080):
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
-               "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
     COLORS = numpy.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe(PROTOTXT_MOBILE_NET_SSD, CAFFEMODEL_MOBILE_NET_SSD)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -145,7 +142,7 @@ def object_detect_from_screen(frames=100, bit_rate=10, save_file="output.avi", x
         detections = net.forward()
         for i in numpy.arange(0, detections.shape[2]):
             confidence = detections[0, 0, i, 2]
-            if confidence > 0.2:
+            if confidence > GLOB_CONFIDENCE:
                 idx = int(detections[0, 0, i, 1])
                 box = detections[0, 0, i, 3:7] * numpy.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
