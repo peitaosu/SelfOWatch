@@ -10,3 +10,9 @@ This project will follow this 2 rules:
 ```
 pip install -r requirements.txt
 ```
+
+## Usage
+Launch Overwatch, then
+```
+python start.py
+```
