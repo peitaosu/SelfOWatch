@@ -1,3 +1,4 @@
 wxProject
 opencv-python
 imutils
+Pillow
