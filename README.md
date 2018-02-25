@@ -11,6 +11,10 @@ This project will follow this 2 rules:
 pip install -r requirements.txt
 ```
 
+## Supported
+* Real Time Object Detect
+* Object Detect from Screen
+
 ## Usage
 Launch Overwatch, then
 ```
